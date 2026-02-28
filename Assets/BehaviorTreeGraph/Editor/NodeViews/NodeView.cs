@@ -37,7 +37,7 @@ namespace BehaviorTreeGraph.Editor.NodeViews
             CreateInputPort();
         }
 
-        public void Dispose()//todo где-то вызвать 
+        public void Dispose()
         {
             _childOrderView.MoveIndexButtonClicked -= OnMoveIndexButtonClicked;
             _childOrderView.Dispose();

@@ -14,7 +14,7 @@ namespace BehaviorTreeGraph.Editor
 {
     public class BehaviorTreeView : GraphView
     {
-        private BehaviorTreeConfiguration _currentTree;
+        private BehaviorTreeConfiguration _currentTree;//перенести это в CreatedNodesManager
         private CreatedNodesManager _createdNodesManager;
         private NodeViewFactory _nodeViewFactory;
 
@@ -91,13 +91,21 @@ namespace BehaviorTreeGraph.Editor
             {
                 foreach (var element in change.elementsToRemove)
                 {
-                    if (element is Edge edge)
+                    switch (element)
                     {
-                        if (edge.output.node is SequenceNodeView sequence)
+                        case NodeView nodeView:
+                            DeleteNode(nodeView);
+                            break;
+                        case Edge edge:
                         {
-                            var child = edge.input.node as NodeView;
-                            child?.ChildOrderView.Hide();
-                            _createdNodesManager.RemoveChildFromCompositeNode(sequence, child);
+                            if (edge.output.node is SequenceNodeView sequence)
+                            {
+                                var child = edge.input.node as NodeView;
+                                child?.ChildOrderView.Hide();
+                                _createdNodesManager.RemoveChildFromCompositeNode(sequence, child);
+                            }
+
+                            break;
                         }
                     }
                 }
@@ -117,6 +125,7 @@ namespace BehaviorTreeGraph.Editor
 
         public void SetTree(BehaviorTreeConfiguration tree)
         {
+            _createdNodesManager.SetCurrentTree(tree); 
             _currentTree = tree;
         }
         
@@ -153,11 +162,11 @@ namespace BehaviorTreeGraph.Editor
             var nodeView = _nodeViewFactory.Create(nodeData);
            _createdNodesManager.AddAndSubscribe(nodeView, nodeData);
             AddElement(nodeView);
-            
-            AssetDatabase.AddObjectToAsset(nodeData, _currentTree);
-            _currentTree.Nodes.Add(nodeData);
-            EditorUtility.SetDirty(_currentTree);
-            AssetDatabase.SaveAssets();
+        }
+
+        private void DeleteNode(NodeView nodeView)
+        {
+            _createdNodesManager.RemoveAndDispose(nodeView);
         }
 
         public void LoadNodesFromConfiguration()
