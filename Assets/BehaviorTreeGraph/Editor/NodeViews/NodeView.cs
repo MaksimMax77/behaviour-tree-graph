@@ -7,6 +7,7 @@ namespace BehaviorTreeGraph.Editor.NodeViews
 {
     public class NodeView : Node
     {
+        public event Action<NodeView, bool> MoveIndexRequested;
         public event Action<Vector2> PositionChanged;
         private Port _inputPort;
         private CompositeChildOrderView _childOrderView;
@@ -22,22 +23,29 @@ namespace BehaviorTreeGraph.Editor.NodeViews
         public NodeView(string title,
             Vector2 startPos, VisualElement inspector)
         {
-           this.title = title;
+            this.title = title;
 
             style.left = startPos.x;
             style.top = startPos.y;
             
             _childOrderView = new CompositeChildOrderView(extensionContainer);
-            _childOrderView.MoveRequested += OnMoveRequested; //todo сделать диспоус для нод
+            _childOrderView.MoveIndexButtonClicked += OnMoveIndexButtonClicked;
+            
             
             extensionContainer.Add(inspector);
             RefreshExpandedState();
             CreateInputPort();
         }
 
-        private void OnMoveRequested(bool up)
+        public void Dispose()//todo где-то вызвать 
         {
-            
+            _childOrderView.MoveIndexButtonClicked -= OnMoveIndexButtonClicked;
+            _childOrderView.Dispose();
+        }
+
+        private void OnMoveIndexButtonClicked(bool up)
+        {
+            MoveIndexRequested?.Invoke(this, up);
         }
         
         private void CreateInputPort()
@@ -57,4 +65,3 @@ namespace BehaviorTreeGraph.Editor.NodeViews
         }
     }
 }
-

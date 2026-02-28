@@ -5,9 +5,9 @@ namespace BehaviorTreeGraph.Runtime.Core.Nodes
 {
     public abstract class CompositeNode : BehaviorTreeNode
     {
-        [SerializeField] private List<BehaviorTreeNode> _children = new List<BehaviorTreeNode>();
+        [SerializeField] private List<BehaviorTreeNode> _children = new();
 
-        public IReadOnlyList<BehaviorTreeNode> Children => _children;
+        public List<BehaviorTreeNode> Children => _children;
         
         public void AddChild(BehaviorTreeNode child)
         {

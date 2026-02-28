@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using BehaviorTreeGraph.Editor.NodeViews;
 using BehaviorTreeGraph.Runtime.Core.Nodes;
 using Unity.VisualScripting;
@@ -12,7 +13,69 @@ namespace BehaviorTreeGraph.Editor
         public void AddAndSubscribe(NodeView nodeView, BehaviorTreeNode node)
         {
             nodeView.PositionChanged += node.SetPosition;
+            nodeView.MoveIndexRequested += OnMoveIndexRequested;
             _nodes.Add(nodeView, node);
+        }
+
+        public void Dispose()
+        {
+            foreach (var node in _nodes)
+            {
+                node.Key.PositionChanged -= node.Value.SetPosition;
+                node.Key.MoveIndexRequested -= OnMoveIndexRequested;
+            }
+
+            _nodes.Clear();
+        }
+
+        private void OnMoveIndexRequested(NodeView nodeView, bool up)
+        {
+            if (!_nodes.TryGetValue(nodeView, out var currentNode))
+            {
+                return;
+            }
+
+            if (!TryGetParent(currentNode, out var parentNode))
+            {
+                return;
+            }
+            
+            var children = parentNode.Children;
+
+            var oldIndex = children.IndexOf(currentNode);
+            var newIndex = up ? oldIndex - 1 : oldIndex + 1;
+
+            if (newIndex < 0 || newIndex >= children.Count)
+                return;
+            children.RemoveAt(oldIndex);
+            children.Insert(newIndex, currentNode);
+
+            UpdateChildIndices(parentNode);
+        }
+
+        private bool TryGetParent(BehaviorTreeNode currentNode, out CompositeNode parent)
+        {
+            parent = null;
+
+            foreach (var kvp in _nodes)
+            {
+                var node = kvp.Value;
+
+                if (node is not CompositeNode compositeNode)
+                {
+                    continue;
+                }
+
+                if (!compositeNode.Children.Contains(currentNode))
+                {
+                    continue;
+                }
+                
+                parent = compositeNode;
+                return true;
+            }
+
+            return false;
         }
 
         public void AddChildToCompositeNode(NodeView parent, NodeView child)
@@ -108,16 +171,6 @@ namespace BehaviorTreeGraph.Editor
                     return kvp.Key;
             }
             return null;
-        }
-
-        public void Dispose()
-        {
-            foreach (var node in _nodes)
-            {
-                node.Key.PositionChanged -= node.Value.SetPosition;
-            }
-
-            _nodes.Clear();
         }
     }
 }

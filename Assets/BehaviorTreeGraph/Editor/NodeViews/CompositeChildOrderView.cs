@@ -6,8 +6,7 @@ namespace BehaviorTreeGraph.Editor.NodeViews
 {
     public class CompositeChildOrderView
     {
-        public event Action<bool> MoveRequested;
-
+        public event Action<bool> MoveIndexButtonClicked;
         private readonly VisualElement _root;
         private VisualElement _container;
         private Label _indexLabel;
@@ -27,9 +26,12 @@ namespace BehaviorTreeGraph.Editor.NodeViews
             _container.style.flexDirection = FlexDirection.Row;
             _container.style.alignItems = Align.Center;
             _container.style.marginTop = 4;
-
-            _upButton = new Button(() => MoveRequested?.Invoke(true)) { text = "↑" };
-            _downButton = new Button(() => MoveRequested?.Invoke(false)) { text = "↓" };
+            
+            _upButton = new Button { text ="↑" };
+            _downButton = new Button{ text = "↓" };
+            
+            _upButton.clicked += OnUpButtonClicked;
+            _downButton.clicked += OnDownButtonClicked;
 
             _upButton.style.width = 20;
             _downButton.style.width = 20;
@@ -48,6 +50,22 @@ namespace BehaviorTreeGraph.Editor.NodeViews
             _container.Add(_downButton);
 
             _root.Add(_container);
+        }
+
+        public void Dispose()//todo нужно где-то вызывать 
+        {
+            _upButton.clicked -= OnUpButtonClicked;
+            _downButton.clicked -= OnDownButtonClicked;
+        }
+
+        private void OnUpButtonClicked()
+        {
+            MoveIndexButtonClicked?.Invoke(true);
+        }
+
+        private void OnDownButtonClicked()
+        {
+            MoveIndexButtonClicked?.Invoke(false);
         }
 
         public void SetIndex(int index)
